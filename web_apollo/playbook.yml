@@ -1,0 +1,19 @@
+---
+# file: playbook.yml
+#   Use this file to setup components required for Web Apollo
+
+# Before running roles inside this playbook, copy
+# ``inventory/builders.sample`` as ``inventory/builders`` and edit it
+# to provide info about your instance(s)
+
+# To install the software, use this role via the following command (make sure
+# you provided an instance IP in ``inventory/builders``):
+#
+#   % ansible-playbook -i inventory/builders playbook.yml
+#
+- hosts: localhost
+  connection: local
+  sudo: yes
+  roles:
+    - web_apollo
+  tags: web_apollo
