@@ -7,7 +7,7 @@
 
   # Finalise sdkman install, this is used to install grails
   - name: "Refresh sdkman"
-    command: "source "$HOME/.sdkman/bin/sdkman-init.sh""
+    command: "source "$HOME/.sdkman/bin/sdkman-init.sh"
     become: yes
 
   # Install grails version 2.4.5
