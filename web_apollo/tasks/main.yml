@@ -1,0 +1,145 @@
+---
+  # Install grails
+  # Firstly install sdkman
+  - name: "Install sdkman for Grails installation"
+    get_url: url="get.sdkman.io" dest=/mnt/gvl/.sdkman/bin/sdkman-init.sh mode=0755
+    become: yes
+
+  # Finalise sdkman install, this is used to install grails
+  - name: "Refresh sdkman"
+    command: "source "/mnt/gvl/.sdkman/bin/sdkman-init.sh"
+    become: yes
+
+  # Install grails version 2.4.5
+  - name: "Install grails version {{ grails_version }}"
+    command: "sdk install grails {{ grails_version }}"
+    become: yes
+
+  # Install tomcat, ant, and tomcat7-admin (just in case we need admin console)
+  - name: "Install Tomcat and Ant"
+    apt: pkg={{ item }} state=installed
+    with_items:
+        - tomcat7
+        - tomcat7-admin
+        - ant
+    become: yes
+
+  # Increase memory for tomcat7
+  # This is a requirement for Web Apollo, or it will crash
+  - name: "Increase memory for tomcat"
+    copy: src="files/setenv.sh" dest="/usr/share/tomcat7" owner=ubuntu mode=0755
+    become: yes
+
+  # Install Web Apollo by cloning git repo
+  # Version defined in defaults/main.yml
+  - name: "Install apollo"
+    git: repo=https://github.com/GMOD/Apollo.git dest={{ apollo_home }} version={{ apollo_version }}
+
+   #TODO: REMOVE THIS
+   #install apollo - git clone. This should be versioned
+   #73  cd /mnt/gvl/apps/
+   #74  git clone https://github.com/GMOD/Apollo.git Apollo
+   #75  cd Apollo/
+
+  # Copy the postgres config files for Apollo
+  - name: "Copy postgres config files"
+    template: src="files/apollo-config.groovy.j2" dest="{{ apollo_home }}/apollo-config.groovy" owner=ubuntu mode=0600
+
+   #TODO: REMOVE THIS
+   #copy apollo config from files
+   #77  nano sample-postgres-apollo-config.groovy
+   #78  ./apollo run-local
+   #79  ./apollo run-local --stacktrace
+
+   #THIS NEEDS TO BE CHANGED because of no chado db. No dev, test
+   #TODO: Should this be a variable?
+
+  # Create a new database user, database_user
+  - name: "Create the database postgres user"
+    command: sudo -u postgres bash -c "psql -c \"CREATE USER {{ database_user }} WITH PASSWORD '{{ database_pass }}';\""
+    args:
+      chdir: "{{ apollo_home }}"
+
+
+  - name: "Create database directory"
+    file: path="{{ apollo_home }}/db" state=directory
+
+  - name: "Make postgres aware of the new database location"
+    command: sudo -u postgres bash -c "psql -c \"CREATE TABLESPACE gvl LOCATION '/mnt/gvl/apps/Apollo/db/'\""
+    args:
+      chdir: "{{ apollo_home }}"
+
+  # Create the production database, apollo-production
+  - name: "Create database"
+    command: sudo su postgres -c "createdb -E UTF-8 -D gvl -O {{ database_user }} {{ database_prod }}"
+    args:
+      chdir: "{{ apollo_home }}"
+
+  # Create the production database, apollo-production
+  - name: "Create database"
+    command: sudo su postgres -c "createdb -E UTF-8 -D {{ apollo_home }}/db -O {{ database_user }} {{ database_prod_chado }}"
+    args:
+      chdir: "{{ apollo_home }}"
+
+   #TODO: REMOVE THIS
+   #95  sudo su postgres -c "createuser -RDIElPS database_user"
+   #96  cd /mnt/gvl/apps/
+   #101  sudo su postgres -c "createdb -E UTF-8 -O database_user apollo-production"
+
+  # Apollo config is finished- run apollo deploy script to create war file
+  - name: "Deploy apollo"
+    command: "./apollo deploy"
+    args:
+      chdir: "{{ apollo_home }}"
+
+   #107  ./apollo deploy
+
+  # Copy files for tomcat (server.xml)
+  # TODO: make sure it looks in the right place for the war files!
+  # TODO: REMOVE  - 122  sudo nano server.xml
+  - name: "Copy server.xml to correct place"
+    template: src=server.xml.j2 dest="{{ tomcat_conf }}/server.xml" owner=tomcat7 mode=0600
+
+  #123  service tomcat7 restart
+
+  # Restart Tomcat
+  - name: "Restart tomcat7"
+    service: name=tomcat7 state=restarted
+
+  # Remove the default webapp files so we never see the splash screen
+  - name: "Remove default webapp files"
+    file: path=/var/lib/tomcat7/webapps/ROOT state=absent
+
+   #TODO: REMOVE THIS
+  #remove the default tomcat war file
+  #124  cd /var/lib/tomcat7/webapps/
+  #125  ls
+  #126  cd ROOT/
+  #127  ls
+  #128  cd ..
+
+  # Rename the apollo war file to something cleaner
+  - name: "Rename apollo war file"
+    command: "mv apollo-{{ apollo_version }}-SNAPSHOT.war apollo.war"
+    args:
+      chdir: {{ apollo_home }}/target/
+
+   #TODO: REMOVE THIS
+  #129  cp /mnt/gvl/apps/Apollo/target/apollo-2.0.3-SNAPSHOT.war .
+  #138  mv apollo-2.0.3-SNAPSHOT.war apollo.war
+  #130  service tomcat7 restart
+  #131  cd ROOT/
+
+  # Add file to nginx folder to get tomcat and nginx to talk nicely
+  - name: "Copy nginx config file"
+    copy: src="files/apollo.locations" dest="{{ nginx_config }}/apollo.locations" mode=0600
+    become: yes
+
+  # Restart Nginx to apply changes
+  - name: "restart nginx"
+    service: name=nginx state=restarted
+
+   #TODO: REMOVE THIS
+  #226  cd /etc/nginx/sites-enabled/
+  #251  sudo nano apollo.locations
+  #252  service nginx restart
