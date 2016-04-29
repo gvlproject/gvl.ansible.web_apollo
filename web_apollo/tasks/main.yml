@@ -62,7 +62,7 @@
 
   # Create the production database, apollo-production
   - name: "Create database"
-    command: sudo su postgres -c "createdb -E UTF-8 -O {{ database_user }} {{ database_prod }}"
+    command: sudo -u postgres bash -c "psql -c \"CREATE USER {{ database_user }} WITH PASSWORD '{{ database_pass }}';\""
     args:
       chdir: {{ apollo_home }}
 
