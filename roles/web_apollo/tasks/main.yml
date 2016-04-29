@@ -2,12 +2,12 @@
   # Install grails
   # Firstly install sdkman
   - name: "Install sdkman for Grails installation"
-    command: "curl -s get.sdkman.io | bash"
+    get_url: url="get.sdkman.io" dest=/mnt/gvl/.sdkman/bin/sdkman-init.sh mode=0755
     become: yes
 
   # Finalise sdkman install, this is used to install grails
   - name: "Refresh sdkman"
-    command: "source "$HOME/.sdkman/bin/sdkman-init.sh"
+    command: "source "/mnt/gvl/.sdkman/bin/sdkman-init.sh"
     become: yes
 
   # Install grails version 2.4.5
@@ -58,7 +58,7 @@
   - name: "Create the database postgres user"
     command: sudo -u postgres bash -c "psql -c \"CREATE USER {{ database_user }} WITH PASSWORD '{{ database_pass }}';\""
     args:
-      chdir: {{ apollo_home }}
+      chdir: "{{ apollo_home }}"
 
 
   - name: "Create database directory"
@@ -67,19 +67,19 @@
   - name: "Make postgres aware of the new database location"
     command: sudo -u postgres bash -c "psql -c \"CREATE TABLESPACE gvl LOCATION '/mnt/gvl/apps/Apollo/db/'\""
     args:
-      chdir: {{ apollo_home }}
+      chdir: "{{ apollo_home }}"
 
   # Create the production database, apollo-production
   - name: "Create database"
     command: sudo su postgres -c "createdb -E UTF-8 -D gvl -O {{ database_user }} {{ database_prod }}"
     args:
-      chdir: {{ apollo_home }}
+      chdir: "{{ apollo_home }}"
 
   # Create the production database, apollo-production
   - name: "Create database"
     command: sudo su postgres -c "createdb -E UTF-8 -D {{ apollo_home }}/db -O {{ database_user }} {{ database_prod_chado }}"
     args:
-      chdir: {{ apollo_home }}
+      chdir: "{{ apollo_home }}"
 
    #TODO: REMOVE THIS
    #95  sudo su postgres -c "createuser -RDIElPS database_user"
@@ -90,7 +90,7 @@
   - name: "Deploy apollo"
     command: "./apollo deploy"
     args:
-      chdir: {{ apollo_home }}
+      chdir: "{{ apollo_home }}"
 
    #107  ./apollo deploy
 
