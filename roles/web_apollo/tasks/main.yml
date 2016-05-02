@@ -37,7 +37,7 @@
 
   - name: "Setting environment variables"
     become: yes
-    lineinfile: dest={{ item[0] }} line={{ item[1] }} state=present
+    lineinfile: dest="{{ item[0] }}" line="{{ item[1] }}" state=present
     with_nested:
       - ["/home/ubuntu/.bashrc", "/home/ubuntu/.profile", "/root/.bashrc", "/root/.profile", "/home/researcher/.bashrc", "/home/researcher/.profile"]
       - ["export GRAILS_HOME={{ grails_home }}",

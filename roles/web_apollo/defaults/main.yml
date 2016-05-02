@@ -1,7 +1,7 @@
 ---
 
   apollo_version: "2.0.2"
-  grails_version: "2.4.5"
+  grails_version: "v2.4.5"
 
   apollo_home: "/mnt/gvl/apps/apollo"
   grails_home: "/mnt/gvl/apps/grails"
