@@ -1,8 +1,8 @@
 ---
   # Install grails
 
-  # - name: "Create database directory"
-  #   file: path="/mnt/gvl/.sdkman/bin/" state=directory recurse=yes
+  - name: "Create grails directory"
+    file: path="{{ grails_home }}" state=directory recurse=yes
   #
   # # Firstly install sdkman
   # - name: "Install sdkman for Grails installation"
@@ -18,8 +18,10 @@
   # Install Web Apollo by cloning git repo
   # Version defined in defaults/main.yml
   - name: "Install grails"
-    git: repo=https://github.com/grails/grails-core.git dest={{ grails_home }} version={{ grails_version }}
+    get_url: url="https://github-cloud.s3.amazonaws.com/releases/512295/1a43468a-d25a-11e4-80c1-117801ae3765.zip?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAISTNZFOVBIJMK3TQ%2F20160502%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20160502T033129Z&X-Amz-Expires=300&X-Amz-Signature=830296021a8e58021a7e51ad4d722ec5b6d47415712afde24d3725f736521b9a&X-Amz-SignedHeaders=host&actor_id=2037786&response-content-disposition=attachment%3B%20filename%3Dgrails-2.4.5.zip&response-content-type=application%2Foctet-stream" dest={{ grails_home }}
 
+  - unarchive: src="{{ grails_home }}/grails-2.4.5.zip" dest="{{ grails_home }}" copy=no
+  
   # Install grails version 2.4.5
   #- name: "Install grails"
 #    command: "sdk install grails {{ grails_version }}"
