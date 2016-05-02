@@ -1,31 +1,21 @@
 ---
   # Install grails
 
-  - name: "Create grails directory"
+  #Create directory where sdkman belongs
+  - name: "Create sdkman directory"
     file: path="{{ grails_home }}" state=directory recurse=yes
-  #
-  # # Firstly install sdkman
-  # - name: "Install sdkman for Grails installation"
-  #   get_url: url="http://get.sdkman.io" dest=/mnt/gvl/.sdkman/bin/sdkman-init.sh mode=0755
-  #   become: yes
-  #
-  # # Finalise sdkman install, this is used to install grails
-  # - name: "Refresh sdkman"
-  #   shell: /mnt/gvl/.sdkman/bin/sdkman-init.sh
-  #   become: yes
 
+  #Download sdkman for easy grails install
+  - name: Download sdkman
+    shell:
+      curl -s get.sdkman.io | bash executable: /bin/bash
 
-  # Install Web Apollo by cloning git repo
-  # Version defined in defaults/main.yml
-  - name: "Install grails"
-    get_url: url="https://github-cloud.s3.amazonaws.com/releases/512295/1a43468a-d25a-11e4-80c1-117801ae3765.zip?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAISTNZFOVBIJMK3TQ%2F20160502%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20160502T033129Z&X-Amz-Expires=300&X-Amz-Signature=830296021a8e58021a7e51ad4d722ec5b6d47415712afde24d3725f736521b9a&X-Amz-SignedHeaders=host&actor_id=2037786&response-content-disposition=attachment%3B%20filename%3Dgrails-2.4.5.zip&response-content-type=application%2Foctet-stream" dest={{ grails_home }}
-
-  - unarchive: src="{{ grails_home }}/grails-2.4.5.zip" dest="{{ grails_home }}" copy=no
-  
-  # Install grails version 2.4.5
-  #- name: "Install grails"
-#    command: "sdk install grails {{ grails_version }}"
-#    become: yes
+  #Install grails 2.4.5
+  #This is the version required by web apollo
+  - name: "Install grails version 2.4.5"
+    shell: "source {{ grails_home }}/sdkman-init.sh && yes | sdk install grails {{ grails_version }}"
+    args:
+        executable: /bin/bash
 
   # Install tomcat, ant, and tomcat7-admin (just in case we need admin console)
   - name: "Install Tomcat and Ant"
@@ -36,18 +26,22 @@
         - ant
     become: yes
 
-
+  #Set environment variables inside profile & bashrc files
   - name: "Setting environment variables"
     become: yes
     lineinfile: dest="{{ item[0] }}" line="{{ item[1] }}" state=present
     with_nested:
       - ["/home/ubuntu/.bashrc", "/home/ubuntu/.profile", "/root/.bashrc", "/root/.profile", "/home/researcher/.bashrc", "/home/researcher/.profile"]
-      - ["export GRAILS_HOME={{ grails_home }}",
-         "export TOMCAT_HOME=/var/lib/tomcat7/",
+      - ["export TOMCAT_HOME=/var/lib/tomcat7/",
          "export CATALINA_HOME=/usr/share/tomcat7",
          "export CATALINA_BASE=/var/lib/tomcat7",
-         "export PATH=$JAVA_HOME/bin:$PATH",
-         "export PATH=$PATH:$GRAILS_HOME/bin"]
+         "export PATH=$JAVA_HOME/bin:$PATH"]
+
+  #Set environment variables - source bashrc
+  - name: "Source ~/.bashrc"
+    shell: source /home/ubuntu/.bashrc
+    args:
+      executable: /bin/bash
 
   # Increase memory for tomcat7
   # This is a requirement for Web Apollo, or it will crash
@@ -68,7 +62,7 @@
 
   # Copy the postgres config files for Apollo
   - name: "Copy postgres config files"
-    template: src="files/apollo-config.groovy.j2" dest="{{ apollo_home }}/apollo-config.groovy" owner=ubuntu mode=0600
+    template: src="apollo-config.groovy.j2" dest="{{ apollo_home }}/apollo-config.groovy" owner=ubuntu mode=0600
 
    #TODO: REMOVE THIS
    #copy apollo config from files
