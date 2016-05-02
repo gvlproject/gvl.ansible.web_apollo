@@ -122,7 +122,7 @@
   - name: "Rename apollo war file"
     command: "mv apollo-{{ apollo_version }}-SNAPSHOT.war apollo.war"
     args:
-      chdir: {{ apollo_home }}/target/
+      chdir: "{{ apollo_home }}/target/"
 
    #TODO: REMOVE THIS
   #129  cp /mnt/gvl/apps/Apollo/target/apollo-2.0.3-SNAPSHOT.war .
