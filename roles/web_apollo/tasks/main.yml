@@ -1,23 +1,29 @@
 ---
   # Install grails
 
-  - name: "Create database directory"
-    file: path="/mnt/gvl/.sdkman/bin/" state=directory recurse=yes
+  # - name: "Create database directory"
+  #   file: path="/mnt/gvl/.sdkman/bin/" state=directory recurse=yes
+  #
+  # # Firstly install sdkman
+  # - name: "Install sdkman for Grails installation"
+  #   get_url: url="http://get.sdkman.io" dest=/mnt/gvl/.sdkman/bin/sdkman-init.sh mode=0755
+  #   become: yes
+  #
+  # # Finalise sdkman install, this is used to install grails
+  # - name: "Refresh sdkman"
+  #   shell: /mnt/gvl/.sdkman/bin/sdkman-init.sh
+  #   become: yes
 
-  # Firstly install sdkman
-  - name: "Install sdkman for Grails installation"
-    get_url: url="http://get.sdkman.io" dest=/mnt/gvl/.sdkman/bin/sdkman-init.sh mode=0755
-    become: yes
 
-  # Finalise sdkman install, this is used to install grails
-  - name: "Refresh sdkman"
-    shell: /mnt/gvl/.sdkman/bin/sdkman-init.sh
-    become: yes
+  # Install Web Apollo by cloning git repo
+  # Version defined in defaults/main.yml
+  - name: "Install grails"
+    git: repo=https://github.com/grails/grails-core.git dest={{ grails_home }} version={{ grails_version }}
 
   # Install grails version 2.4.5
-  - name: "Install grails version {{ grails_version }}"
-    command: "sdk install grails {{ grails_version }}"
-    become: yes
+  #- name: "Install grails"
+#    command: "sdk install grails {{ grails_version }}"
+#    become: yes
 
   # Install tomcat, ant, and tomcat7-admin (just in case we need admin console)
   - name: "Install Tomcat and Ant"
@@ -27,6 +33,19 @@
         - tomcat7-admin
         - ant
     become: yes
+
+
+  - name: "Setting environment variables"
+    become: yes
+    lineinfile: dest={{ item[0] }} line={{ item[1] }} state=present
+    with_nested:
+      - ["/home/ubuntu/.bashrc", "/home/ubuntu/.profile", "/root/.bashrc", "/root/.profile", "/home/researcher/.bashrc", "/home/researcher/.profile"]
+      - ["export GRAILS_HOME={{ grails_home }}",
+         "export TOMCAT_HOME=/var/lib/tomcat7/",
+         "export CATALINA_HOME=/usr/share/tomcat7",
+         "export CATALINA_BASE=/var/lib/tomcat7",
+         "export PATH=$JAVA_HOME/bin:$PATH",
+         "export PATH=$PATH:$GRAILS_HOME/bin"]
 
   # Increase memory for tomcat7
   # This is a requirement for Web Apollo, or it will crash
