@@ -50,7 +50,7 @@
   # Increase memory for tomcat7
   # This is a requirement for Web Apollo, or it will crash
   - name: "Increase memory for tomcat"
-    copy: src="files/setenv.sh" dest="/usr/share/tomcat7" owner=ubuntu mode=0755
+    copy: src="setenv.sh" dest="/usr/share/tomcat7" owner=ubuntu mode=0755
     become: yes
 
   # Install Web Apollo by cloning git repo
@@ -155,7 +155,7 @@
 
   # Add file to nginx folder to get tomcat and nginx to talk nicely
   - name: "Copy nginx config file"
-    copy: src="files/apollo.locations" dest="{{ nginx_config }}/apollo.locations" mode=0600
+    copy: src="apollo.locations" dest="{{ nginx_config }}/apollo.locations" mode=0600
     become: yes
 
   # Restart Nginx to apply changes
