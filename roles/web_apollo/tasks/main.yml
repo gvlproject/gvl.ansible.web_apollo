@@ -2,7 +2,7 @@
   # Install grails
 
   - name: "Create database directory"
-    file: path="/mnt/gvl/.sdkman/bin/" state=directory recursive=yes
+    file: path="/mnt/gvl/.sdkman/bin/" state=directory recurse=yes
 
   # Firstly install sdkman
   - name: "Install sdkman for Grails installation"
@@ -11,7 +11,7 @@
 
   # Finalise sdkman install, this is used to install grails
   - name: "Refresh sdkman"
-    command: "source \"/mnt/gvl/.sdkman/bin/sdkman-init.sh\""
+    shell: /mnt/gvl/.sdkman/bin/sdkman-init.sh
     become: yes
 
   # Install grails version 2.4.5
