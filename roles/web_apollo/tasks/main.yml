@@ -1,5 +1,9 @@
 ---
   # Install grails
+
+  - name: "Create database directory"
+    file: path="/mnt/gvl/.sdkman/bin/" state=directory recursive=yes
+
   # Firstly install sdkman
   - name: "Install sdkman for Grails installation"
     get_url: url="http://get.sdkman.io" dest=/mnt/gvl/.sdkman/bin/sdkman-init.sh mode=0755
