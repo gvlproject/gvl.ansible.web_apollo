@@ -2,7 +2,7 @@
   # Install grails
   # Firstly install sdkman
   - name: "Install sdkman for Grails installation"
-    get_url: url="get.sdkman.io" dest=/mnt/gvl/.sdkman/bin/sdkman-init.sh mode=0755
+    get_url: url="http://get.sdkman.io" dest=/mnt/gvl/.sdkman/bin/sdkman-init.sh mode=0755
     become: yes
 
   # Finalise sdkman install, this is used to install grails
