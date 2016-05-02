@@ -88,27 +88,29 @@
   # Apollo config is finished- run apollo deploy script to create war file
   - name: "Deploy apollo"
     command: "./apollo deploy"
+    become: yes
     args:
       chdir: "{{ apollo_home }}"
-
-  # Copy files for tomcat (server.xml)
-  # TODO: CHANGE LOCATION OF THE LOG FILES
-  - name: "Copy server.xml to correct place"
-    template: src=server.xml.j2 dest="{{ tomcat_conf }}/server.xml" owner=tomcat7 mode=0600
-
-  # Restart Tomcat
-  - name: "Restart tomcat7"
-    service: name=tomcat7 state=restarted
-
-  # Remove the default webapp files so we never see the splash screen
-  - name: "Remove default webapp files"
-    file: path=/var/lib/tomcat7/webapps/ROOT state=absent
 
   # Rename the apollo war file to something cleaner
   - name: "Rename apollo war file"
     command: "mv apollo-{{ apollo_version }}-SNAPSHOT.war apollo.war"
     args:
       chdir: "{{ apollo_home }}/target/"
+
+  # Remove the default webapp files so we never see the splash screen
+  - name: "Remove default webapp files"
+    file: path=/var/lib/tomcat7/webapps/ROOT state=absent
+
+  # Copy files for tomcat (server.xml)
+  # TODO: CHANGE LOCATION OF THE LOG FILES
+  - name: "Copy server.xml to correct place"
+    template: src=server.xml.j2 dest="{{ tomcat_config }}/server.xml" owner=tomcat7 mode=0600
+
+  # Restart Tomcat
+  - name: "Restart tomcat7"
+    service: name=tomcat7 state=restarted
+    become: yes
 
   # Add file to nginx folder to get tomcat and nginx to talk nicely
   - name: "Copy nginx config file"
