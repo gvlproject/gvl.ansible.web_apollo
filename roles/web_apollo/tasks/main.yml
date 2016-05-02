@@ -81,7 +81,7 @@
 
   # Create the production database, apollo-production
   - name: "Create database"
-    command: sudo su postgres -c "createdb -E UTF-8 -D {{ apollo_home }}/db -O {{ database_user }} {{ database_prod_chado }}"
+    command: sudo su postgres -c "createdb -E UTF-8 -D gvl -O {{ database_user }} {{ database_prod_chado }}"
     args:
       chdir: "{{ apollo_home }}"
 
