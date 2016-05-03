@@ -8,6 +8,8 @@
   - name: Download sdkman
     shell:
       curl -s get.sdkman.io | bash executable: /bin/bash
+    args:
+      chdir: "{{ grails_home }}"
 
   # Install Grails 2.4.5
   # This is the version required by Web Apollo
@@ -34,8 +36,7 @@
       - ["/home/ubuntu/.bashrc", "/home/ubuntu/.profile", "/root/.bashrc", "/root/.profile", "/home/researcher/.bashrc", "/home/researcher/.profile"]
       - ["export TOMCAT_HOME=/var/lib/tomcat7/",
          "export CATALINA_HOME=/usr/share/tomcat7",
-         "export CATALINA_BASE=/var/lib/tomcat7",
-         "export PATH=$JAVA_HOME/bin:$PATH"]
+         "export CATALINA_BASE=/var/lib/tomcat7"]
 
   # Set environment variables - source bashrc
   - name: "Source ~/.bashrc"
