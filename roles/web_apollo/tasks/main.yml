@@ -1,22 +1,28 @@
 ---
   # Install grails
-  # Create directory where sdkman belongs
-  - name: "Create sdkman directory"
-    file: path="{{ grails_home }}" state=directory recurse=yes
 
   # Download sdkman for easy Grails install
-  #- name: Download sdkman
-  #  shell: curl -s get.sdkman.io | bash
-  #  args:
-  #    chdir: "{{ grails_home }}"
-  #    executable: /bin/bash
-  - name: "Install sdkman for Grails installation"
-    get_url: url="get.sdkman.io" dest="{{ grails_home }}/sdkman-init.sh" mode=0755
+  # Download sdkman for easy Grails install
+  - name: Download sdkman
+    shell: export SDKMAN_DIR="{{ grails_home }}" && curl -s get.sdkman.io | bash
+    args:
+      executable: /bin/bash
+
+  - name: "Chown the sdkman directories"
+    shell: "sudo chown -R ubuntu {{ grails_home }}"
+    args:
+      executable: /bin/bash
+
+  - name: "Install grails version 2.4.5"
+    shell: "export SDKMAN_DIR="{{ grails_home }}" && source {{ grails_home }}/bin/sdkman-init.sh"
+    args:
+        executable: /bin/bash
+
 
   # Install Grails 2.4.5
   # This is the version required by Web Apollo
   - name: "Install grails version 2.4.5"
-    shell: "source {{ grails_home }}/sdkman-init.sh && yes | sdk install grails {{ grails_version }}"
+    shell: "yes | sdk install grails {{ grails_version }}"
     args:
         executable: /bin/bash
 
