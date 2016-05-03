@@ -14,7 +14,7 @@
       executable: /bin/bash
 
   - name: "Install grails version 2.4.5"
-    shell: "export SDKMAN_DIR="{{ grails_home }}" && source {{ grails_home }}/bin/sdkman-init.sh"
+    shell: "export SDKMAN_DIR={{ grails_home }} && source {{ grails_home }}/bin/sdkman-init.sh"
     args:
         executable: /bin/bash
 
