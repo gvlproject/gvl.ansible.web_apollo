@@ -1,39 +1,47 @@
 ---
   # Install grails
 
-  # Download sdkman for easy Grails install
+  - name: Create web apollo group
+    group: name=webapollo state=present
+
+  - name: Create SMRT Analysis user
+    user: name=webapollo comment="Web Apollo Owner" group=webapollo shell=/bin/bash home="/mnt/gvl/webapollo" move_home=yes
   # Download sdkman for easy Grails install
   - name: Download sdkman
-    shell: export SDKMAN_DIR="{{ grails_home }}" && curl -s get.sdkman.io | bash
+    shell: curl -s get.sdkman.io | bash
+    become_user: webapollo
     args:
       executable: /bin/bash
 
-  - name: "Chown the sdkman directories"
-    shell: "sudo chown -R ubuntu {{ grails_home }}"
-    args:
-      executable: /bin/bash
+  #- name: "Chown the sdkman directories"
+  #  shell: "sudo chown -R ubuntu {{ grails_home }}"
+  #  args:
+  #    executable: /bin/bash
 
   - name: "Install grails version 2.4.5"
-    shell: "export SDKMAN_DIR={{ grails_home }} && source {{ grails_home }}/bin/sdkman-init.sh"
+    shell: "source {{ grails_home }}/bin/sdkman-init.sh && yes | sdk install grails {{ grails_version }}"
+    become_user: webapollo
     args:
         executable: /bin/bash
 
 
   # Install Grails 2.4.5
   # This is the version required by Web Apollo
-  - name: "Install grails version 2.4.5"
-    shell: "yes | sdk install grails {{ grails_version }}"
-    args:
-        executable: /bin/bash
+  #- name: "Install grails version 2.4.5"
+  #  shell: "export SDKMAN_DIR={{ grails_home }} && "
+  #   args:
+  #      executable: /bin/bash
 
   # Install tomcat, ant, and tomcat7-admin (just in case we need admin console)
   - name: "Install Tomcat and Ant"
     apt: pkg={{ item }} state=installed
+    become: yes
+    become_user: webapollo
     with_items:
         - tomcat7
         - tomcat7-admin
         - ant
-    become: yes
+
 
   # Set environment variables inside profile and bashrc files
   # This probably isn't needed, but just in case
@@ -49,23 +57,26 @@
   # Set environment variables - source bashrc
   - name: "Source ~/.bashrc"
     shell: source /home/ubuntu/.bashrc
+    become_user: webapollo
     args:
       executable: /bin/bash
 
   # Increase memory for tomcat7
   # This is a requirement for Web Apollo, or it will crash
   - name: "Increase memory for tomcat"
-    copy: src="setenv.sh" dest="/usr/share/tomcat7" owner=ubuntu mode=0755
+    copy: src="setenv.sh" dest="/usr/share/tomcat7" owner=tomcat7 mode=0755
     become: yes
 
   # Install Web Apollo by cloning git repo
   # Version defined in defaults/main.yml
   - name: "Install apollo"
     git: repo=https://github.com/GMOD/Apollo.git dest={{ apollo_home }} version={{ apollo_version }}
+    become: yes
+    become_user: webapollo
 
   # Copy the postgres config files for Apollo
   - name: "Copy postgres config files"
-    template: src="apollo-config.groovy.j2" dest="{{ apollo_home }}/apollo-config.groovy" owner=ubuntu mode=0600
+    template: src="apollo-config.groovy.j2" dest="{{ apollo_home }}/apollo-config.groovy" owner=webapollo mode=0600
 
   # Create a new database user, database_user
   - name: "Create the database postgres user"
@@ -101,6 +112,7 @@
   - name: "Deploy apollo"
     command: "./apollo deploy"
     become: yes
+    become_user: webapollo
     args:
       chdir: "{{ apollo_home }}"
 
@@ -122,6 +134,7 @@
   # Restart Tomcat
   - name: "Restart tomcat7"
     service: name=tomcat7 state=restarted
+    become_user: webapollo
     become: yes
 
   # Add file to nginx folder to get tomcat and nginx to talk nicely
