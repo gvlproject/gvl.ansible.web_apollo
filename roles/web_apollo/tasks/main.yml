@@ -120,7 +120,7 @@
 
   # Rename the apollo war file to something cleaner
   - name: "Rename apollo war file"
-    command: "mv apollo-{{ apollo_version }}-SNAPSHOT.war apollo.war"
+    command: "mv apollo-{{ apollo_version }}.war apollo.war"
     args:
       chdir: "{{ apollo_home }}/target/"
 
