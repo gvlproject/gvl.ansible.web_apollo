@@ -6,10 +6,11 @@
 
   - name: Create SMRT Analysis user
     user: name=webapollo comment="Web Apollo Owner" group=webapollo shell=/bin/bash home="/mnt/gvl/webapollo" move_home=yes
+
   # Download sdkman for easy Grails install
   - name: Download sdkman
     shell: curl -s get.sdkman.io | bash
-    become_user: webapollo
+    become_user: ubuntu
     args:
       executable: /bin/bash
 
@@ -20,7 +21,7 @@
 
   - name: "Install grails version 2.4.5"
     shell: "source {{ grails_home }}/bin/sdkman-init.sh && yes | sdk install grails {{ grails_version }}"
-    become_user: webapollo
+    become_user: ubuntu
     args:
         executable: /bin/bash
 
@@ -36,7 +37,7 @@
   - name: "Install Tomcat and Ant"
     apt: pkg={{ item }} state=installed
     become: yes
-    become_user: webapollo
+    become_user: ubuntu
     with_items:
         - tomcat7
         - tomcat7-admin
@@ -57,7 +58,7 @@
   # Set environment variables - source bashrc
   - name: "Source ~/.bashrc"
     shell: source /home/ubuntu/.bashrc
-    become_user: webapollo
+    become_user: ubuntu
     args:
       executable: /bin/bash
 
@@ -72,11 +73,11 @@
   - name: "Install apollo"
     git: repo=https://github.com/GMOD/Apollo.git dest={{ apollo_home }} version={{ apollo_version }}
     become: yes
-    become_user: webapollo
+    become_user: ubuntu
 
   # Copy the postgres config files for Apollo
   - name: "Copy postgres config files"
-    template: src="apollo-config.groovy.j2" dest="{{ apollo_home }}/apollo-config.groovy" owner=webapollo mode=0600
+    template: src="apollo-config.groovy.j2" dest="{{ apollo_home }}/apollo-config.groovy" owner=ubuntu mode=0600
 
   # Create a new database user, database_user
   - name: "Create the database postgres user"
@@ -110,11 +111,12 @@
 
   # Apollo config is finished- run apollo deploy script to create war file
   - name: "Deploy apollo"
-    command: "./apollo deploy"
+    shell: "source {{ grails_home }}/bin/sdkman-init.sh && ./apollo deploy"
     become: yes
-    become_user: webapollo
+    become_user: ubuntu
     args:
       chdir: "{{ apollo_home }}"
+      executable: /bin/bash
 
   # Rename the apollo war file to something cleaner
   - name: "Rename apollo war file"
@@ -134,7 +136,6 @@
   # Restart Tomcat
   - name: "Restart tomcat7"
     service: name=tomcat7 state=restarted
-    become_user: webapollo
     become: yes
 
   # Add file to nginx folder to get tomcat and nginx to talk nicely
