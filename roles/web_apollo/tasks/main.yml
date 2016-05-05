@@ -1,15 +1,9 @@
 ---
   # Install grails
 
-  - name: Create web apollo group
-    group: name=webapollo state=present
-
-  - name: Create SMRT Analysis user
-    user: name=webapollo comment="Web Apollo Owner" group=webapollo shell=/bin/bash home="/mnt/gvl/webapollo" move_home=yes
-
   # Download sdkman for easy Grails install
   - name: Download sdkman
-    shell: curl -s get.sdkman.io | bash
+    shell: export SDKMAN_DIR="/usr/local/sdkman" && curl -s get.sdkman.io | bash
     become_user: ubuntu
     args:
       executable: /bin/bash
