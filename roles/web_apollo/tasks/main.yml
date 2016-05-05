@@ -3,7 +3,7 @@
 
   # Download sdkman for easy Grails install
   - name: Download sdkman
-    shell: export SDKMAN_DIR="/usr/local/sdkman" && curl -s get.sdkman.io | bash
+    shell: "export SDKMAN_DIR=\"{{ grails_home }}\" && curl -s get.sdkman.io | bash"
     become_user: ubuntu
     args:
       executable: /bin/bash
