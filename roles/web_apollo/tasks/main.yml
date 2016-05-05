@@ -87,7 +87,7 @@
       chdir: "{{ apollo_home }}"
 
   - name: "Create database directory"
-    file: path="{{ apollo_home }}/db" state=directory owner=postgres
+    file: path="{{ apollo_home }}/db" state=directory owner=postgres group=postgres mode=777
 
   - name: "Make postgres aware of the new database location"
     command: sudo -u postgres bash -c "psql -c \"CREATE TABLESPACE gvl LOCATION '{{ apollo_home }}/db/'\""
