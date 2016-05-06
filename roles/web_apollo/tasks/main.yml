@@ -31,7 +31,6 @@
   - name: "Install Tomcat and Ant"
     apt: pkg={{ item }} state=installed
     become: yes
-    become_user: ubuntu
     with_items:
         - tomcat7
         - tomcat7-admin
@@ -59,7 +58,7 @@
   # Increase memory for tomcat7
   # This is a requirement for Web Apollo, or it will crash
   - name: "Increase memory for tomcat"
-    copy: src="setenv.sh" dest="/usr/share/tomcat7" owner=tomcat7 mode=0755
+    copy: src="setenv.sh" dest="/usr/share/tomcat7/bin" owner=tomcat7 mode=0755
     become: yes
 
   # Install Web Apollo by cloning git repo
