@@ -1,28 +1,34 @@
 ---
 
-  - name: Check gvl_apps directory exists
-    file: name="gvl/apps" state=directory owner=ubuntu group=ubuntu recurse=yes
+  # Check the GVL directories exist, and chown them to ubuntu
+  - name: "Check /mnt/gvl directory exists"
+    file: name="/mnt/gvl" state=directory owner=ubuntu group=ubuntu
     sudo: yes
     sudo_user: root
-    args:
-      chdir: "/mnt"
 
+  - name: "Check /mnt/gvl/apps directory exists"
+    file: name="/mnt/gvl/apps" state=directory owner=ubuntu group=ubuntu
+    sudo: yes
+    sudo_user: root
 
   # Install grails
   # Download sdkman for easy Grails install
+  # sdkman is installed under /mnt/gvl/.sdkman
   - name: Download sdkman
     shell: "export SDKMAN_DIR=\"{{ grails_home }}\" && curl -s get.sdkman.io | bash"
     become_user: ubuntu
     args:
       executable: /bin/bash
 
+  # Install Grails
+  # Init sdkman before so it knows where to find grails
   - name: "Install grails version 2.4.5"
     shell: "export SDKMAN_DIR=\"{{ grails_home }}\" && source {{ grails_home }}/bin/sdkman-init.sh && yes | sdk install grails {{ grails_version }}"
     become_user: ubuntu
     args:
         executable: /bin/bash
 
-  # Install tomcat, ant, and tomcat7-admin (just in case we need admin console)
+  # Install Tomcat7, Ant, and Tomcat7-admin (just in case we need admin console)
   - name: "Install Tomcat and Ant"
     apt: pkg={{ item }} state=installed
     become: yes
@@ -31,11 +37,11 @@
         - tomcat7-admin
         - ant
 
-
   # Set environment variables inside profile and bashrc files
   # This probably isn't needed, but just in case
   - name: "Setting environment variables"
     become: yes
+    ignore_errors: yes
     lineinfile: dest="{{ item[0] }}" line="{{ item[1] }}" state=present
     with_nested:
       - ["/home/ubuntu/.bashrc", "/home/ubuntu/.profile", "/root/.bashrc", "/root/.profile", "/home/researcher/.bashrc", "/home/researcher/.profile"]
@@ -74,9 +80,11 @@
     args:
       chdir: "{{ apollo_home }}"
 
+  # Ensure the directory for the database exists - owned by postgres
   - name: "Create database directory"
     file: path="{{ apollo_home }}/db" state=directory owner=postgres group=postgres mode=777
 
+  # Make sure postgres uses that location - create the gvl_apollo tablespace
   - name: "Make postgres aware of the new database location"
     command: sudo -u postgres bash -c "psql -c \"CREATE TABLESPACE gvl_apollo LOCATION '{{ apollo_home }}/db/'\""
     ignore_errors: yes
