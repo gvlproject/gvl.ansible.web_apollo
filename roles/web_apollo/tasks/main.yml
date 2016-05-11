@@ -82,7 +82,8 @@
     args:
       chdir: "{{ apollo_home }}"
 
-  # Create the production database, apollo-production
+  #/mnt/gvl/apps/apollo/scripts/load_chado_schema.sh -u apollo-production-chado -d apollo-production-chado -h localhost -p 5432 -s /mnt/gvl/apps/apollo/chado-schema-with-ontologies.sql.gz -r
+  # Create the production chado database, apollo-production-chado
   - name: "Create database"
     command: sudo su postgres -c "createdb -E UTF-8 -D gvl -O {{ database_user }} {{ database_prod_chado }}"
     ignore_errors: yes
