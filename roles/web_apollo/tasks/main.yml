@@ -99,8 +99,7 @@
     become: yes
 
   - name: "Load chado schema"
-    shell: "./load_chado_schema.sh -u apollo-production-chado -d apollo-production-chado -h localhost -p 5432 -s chado-schema-with-ontologies.sql.gz"
-    become: yes
+    shell: "./load_chado_schema.sh -u {{ database_user }} -d {{ database_prod_chado }} -h localhost -p 5432 -s chado-schema-with-ontologies.sql.gz"
     become_user: ubuntu
     args:
       chdir: "{{ apollo_home }}/scripts"

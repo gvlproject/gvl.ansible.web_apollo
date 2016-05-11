@@ -99,7 +99,7 @@ fi
 
 check_config
 
-psql -U $PG_USER -h $HOST -p $PORT -d $DEFAULTDB -c "CREATE DATABASE \"$DB\""
+psql -U $PG_USER -h $HOST -p $PORT -d $DEFAULTDB -c "CREATE DATABASE \"$DB\" WITH TABLESPACE \"gvl\""
 EXIT_STATUS=$?
 
 if [ $EXIT_STATUS -eq 0 ]; then
@@ -124,7 +124,7 @@ elif [ $EXIT_STATUS -eq 1 ]; then
             fi
 
             # CREATE DATABASE
-            psql -U $PG_USER -h $HOST -p $PORT -d $DEFAULTDB -c "CREATE DATABASE \"$DB\""
+            psql -U $PG_USER -h $HOST -p $PORT -d $DEFAULTDB -c "CREATE DATABASE \"$DB\" WITH TABLESPACE \"gvl\""
             if [ $? -ne 0 ]; then
                 echo "Cannot create database '$DB' due to lack of privileges."
                 exit
