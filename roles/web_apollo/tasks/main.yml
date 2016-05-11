@@ -1,12 +1,11 @@
 ---
 
   - name: Check gvl_apps directory exists
-    file: name="{{ gvl_app_path }}" state=directory owner=ubuntu group=ubuntu
+    file: name="/mnt/gvl/apps" state=directory owner=ubuntu group=ubuntu
     sudo: yes
     sudo_user: root
 
   # Install grails
-
   # Download sdkman for easy Grails install
   - name: Download sdkman
     shell: "export SDKMAN_DIR=\"{{ grails_home }}\" && curl -s get.sdkman.io | bash"
@@ -72,50 +71,21 @@
     args:
       chdir: "{{ apollo_home }}"
 
-  - name: "Create the database postgres user"
-    command: sudo -u postgres bash -c "psql -c \"CREATE USER {{ database_user_chado }} WITH PASSWORD '{{ database_pass }}';\""
-    ignore_errors: yes
-    args:
-      chdir: "{{ apollo_home }}"
-
   - name: "Create database directory"
     file: path="{{ apollo_home }}/db" state=directory owner=postgres group=postgres mode=777
 
   - name: "Make postgres aware of the new database location"
-    command: sudo -u postgres bash -c "psql -c \"CREATE TABLESPACE gvl LOCATION '{{ apollo_home }}/db/'\""
+    command: sudo -u postgres bash -c "psql -c \"CREATE TABLESPACE gvl_apollo LOCATION '{{ apollo_home }}/db/'\""
     ignore_errors: yes
     args:
       chdir: "{{ apollo_home }}"
 
   # Create the production database, apollo-production
   - name: "Create database"
-    command: sudo su postgres -c "createdb -E UTF-8 -D gvl -O {{ database_user }} {{ database_prod }}"
+    command: sudo su postgres -c "createdb -E UTF-8 -D gvl_apollo -O {{ database_user }} {{ database_prod }}"
     ignore_errors: yes
     args:
       chdir: "{{ apollo_home }}"
-
-  #
-  # Create the production chado database, apollo-production-chado
-  - name: "Create database"
-    command: sudo su postgres -c "createdb -E UTF-8 -D gvl -O {{ database_user_chado }} {{ database_prod_chado }}"
-    ignore_errors: yes
-    args:
-      chdir: "{{ apollo_home }}"
-
-  - name: "Copy the script file across"
-    copy: src="load_chado_schema.sh" dest="{{ apollo_home }}/scripts/load_chado_schema.sh" owner=ubuntu mode=0755
-    become: yes
-
-  - name: "Copy the script file across"
-    copy: src="chado-schema-with-ontologies.sql.gz" dest="{{ apollo_home }}/scripts/chado-schema-with-ontologies.sql.gz" owner=ubuntu mode=777
-    become: yes
-
-  - name: "Load chado schema"
-    shell: "./load_chado_schema.sh -u {{ database_user_chado }} -d {{ database_prod_chado }} -h localhost -p 5432 -s chado-schema-with-ontologies.sql.gz"
-    become_user: ubuntu
-    args:
-      chdir: "{{ apollo_home }}/scripts"
-      executable: /bin/bash
 
   # Apollo config is finished- run apollo deploy script to create war file
   - name: "Deploy apollo"
@@ -137,7 +107,6 @@
     file: path=/var/lib/tomcat7/webapps/ROOT state=absent
 
   # Copy files for tomcat (server.xml)
-  # TODO: CHANGE LOCATION OF THE LOG FILES
   - name: "Copy server.xml to correct place"
     template: src=server.xml.j2 dest="{{ tomcat_config }}/server.xml" owner=tomcat7 mode=0600
 
