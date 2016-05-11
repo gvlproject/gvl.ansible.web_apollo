@@ -82,13 +82,29 @@
     args:
       chdir: "{{ apollo_home }}"
 
-  #/mnt/gvl/apps/apollo/scripts/load_chado_schema.sh -u apollo-production-chado -d apollo-production-chado -h localhost -p 5432 -s /mnt/gvl/apps/apollo/chado-schema-with-ontologies.sql.gz -r
+  #
   # Create the production chado database, apollo-production-chado
   - name: "Create database"
     command: sudo su postgres -c "createdb -E UTF-8 -D gvl -O {{ database_user }} {{ database_prod_chado }}"
     ignore_errors: yes
     args:
       chdir: "{{ apollo_home }}"
+
+  - name: "Copy the script file across"
+    copy: src="load_chado_schema.sh" dest="{{ apollo_home }}/scripts/load_chado_schema.sh" owner=ubuntu mode=0755
+    become: yes
+
+  - name: "Copy the script file across"
+    copy: src="chado-schema-with-ontologies.sql.gz" dest="{{ apollo_home }}/scripts/chado-schema-with-ontologies.sql.gz" owner=ubuntu mode=777
+    become: yes
+
+  - name: "Load chado schema"
+    shell: "./load_chado_schema.sh -u apollo-production-chado -d apollo-production-chado -h localhost -p 5432 -s chado-schema-with-ontologies.sql.gz"
+    become: yes
+    become_user: ubuntu
+    args:
+      chdir: "{{ apollo_home }}/scripts"
+      executable: /bin/bash
 
   # Apollo config is finished- run apollo deploy script to create war file
   - name: "Deploy apollo"
