@@ -1,14 +1,16 @@
 ---
-
+  # Versions
   apollo_version: "2.0.2"
   grails_version: "2.4.5"
 
+  # Paths
   apollo_home: "/mnt/gvl/apps/apollo"
   grails_home: "/mnt/gvl/.sdkman"
   nginx_config: "/etc/nginx/sites-enabled"
   #tomcat_config: "/etc/tomcat7/conf"
   tomcat_config: "/var/lib/tomcat7/conf"
 
+  # Database info
   database_user: "database_user"
   database_prod: "apollo-production"
   database_pass: "postgres_password"
