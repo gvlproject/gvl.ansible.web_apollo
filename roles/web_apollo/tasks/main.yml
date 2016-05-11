@@ -1,9 +1,12 @@
 ---
 
   - name: Check gvl_apps directory exists
-    file: name="/mnt/gvl/apps" state=directory owner=ubuntu group=ubuntu
+    file: name="gvl/apps" state=directory owner=ubuntu group=ubuntu recurse=yes
     sudo: yes
     sudo_user: root
+    args:
+      chdir: "/mnt"
+
 
   # Install grails
   # Download sdkman for easy Grails install
