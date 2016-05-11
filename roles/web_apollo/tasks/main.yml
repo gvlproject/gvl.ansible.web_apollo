@@ -66,6 +66,12 @@
     args:
       chdir: "{{ apollo_home }}"
 
+  - name: "Create the database postgres user"
+    command: sudo -u postgres bash -c "psql -c \"CREATE USER {{ database_user_chado }} WITH PASSWORD '{{ database_pass }}';\""
+    ignore_errors: yes
+    args:
+      chdir: "{{ apollo_home }}"
+
   - name: "Create database directory"
     file: path="{{ apollo_home }}/db" state=directory owner=postgres group=postgres mode=777
 
@@ -85,7 +91,7 @@
   #
   # Create the production chado database, apollo-production-chado
   - name: "Create database"
-    command: sudo su postgres -c "createdb -E UTF-8 -D gvl -O {{ database_user }} {{ database_prod_chado }}"
+    command: sudo su postgres -c "createdb -E UTF-8 -D gvl -O {{ database_user_chado }} {{ database_prod_chado }}"
     ignore_errors: yes
     args:
       chdir: "{{ apollo_home }}"
@@ -99,7 +105,7 @@
     become: yes
 
   - name: "Load chado schema"
-    shell: "./load_chado_schema.sh -u {{ database_user }} -d {{ database_prod_chado }} -h localhost -p 5432 -s chado-schema-with-ontologies.sql.gz"
+    shell: "./load_chado_schema.sh -u {{ database_user_chado }} -d {{ database_prod_chado }} -h localhost -p 5432 -s chado-schema-with-ontologies.sql.gz"
     become_user: ubuntu
     args:
       chdir: "{{ apollo_home }}/scripts"

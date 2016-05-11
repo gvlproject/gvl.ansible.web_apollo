@@ -76,7 +76,7 @@ environments {
         }
         dataSource_chado{
             dbCreate = "update" // one of 'create', 'create-drop', 'update', 'validate', ''
-            username = "{{ database_user }}"
+            username = "{{ database_user_chado }}"
             password = "{{ database_pass }}"
             driverClassName = "org.postgresql.Driver"
             dialect = org.hibernate.dialect.PostgresPlusDialect
