@@ -62,6 +62,11 @@
     copy: src="setenv.sh" dest="/usr/share/tomcat7/bin" owner=tomcat7 mode=0755
     become: yes
 
+  # Set JAVA_HOME inside the tomcat config.
+  - name: "Set JAVA_HOME in tomcat7 config"
+    copy: src="tomcat7" dest="/etc/default/tomcat7" owner=tomcat7 mode=0755
+    become: yes
+
   # Install Web Apollo by cloning git repo
   # Version defined in defaults/main.yml
   - name: "Install apollo"
@@ -100,7 +105,7 @@
 
   # Apollo config is finished- run apollo deploy script to create war file
   - name: "Deploy apollo"
-    shell: "source {{ grails_home }}/bin/sdkman-init.sh && ./apollo deploy"
+    shell: "export SDKMAN_DIR=\"{{ grails_home }}\" && source {{ grails_home }}/bin/sdkman-init.sh && ./apollo deploy"
     become: yes
     become_user: ubuntu
     args:
@@ -125,6 +130,7 @@
   - name: "Restart tomcat7"
     service: name=tomcat7 state=restarted
     become: yes
+    become_user: root
 
   # Add file to nginx folder to get tomcat and nginx to talk nicely
   - name: "Copy nginx config file"
