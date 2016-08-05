@@ -12,5 +12,7 @@
   database_user: "database_user"
   database_prod: "apollo-production"
   database_pass: "postgres_password"
+  database_user_chado: "database_user_chado"
+  database_prod_chado: "apollo-production-chado"
 
 ...
