@@ -11,23 +11,6 @@
     sudo: yes
     sudo_user: root
 
-  # Install grails
-  # Download sdkman for easy Grails install
-  # sdkman is installed under /mnt/gvl/.sdkman
-  - name: Download sdkman
-    shell: "export SDKMAN_DIR=\"{{ grails_home }}\" && curl -s get.sdkman.io | bash"
-    become_user: ubuntu
-    args:
-      executable: /bin/bash
-
-  # Install Grails
-  # Init sdkman before so it knows where to find grails
-  - name: "Install grails version 2.4.5"
-    shell: "export SDKMAN_DIR=\"{{ grails_home }}\" && source {{ grails_home }}/bin/sdkman-init.sh && yes | sdk install grails {{ grails_version }}"
-    become_user: ubuntu
-    args:
-        executable: /bin/bash
-
   # Install Tomcat7, Ant, and Tomcat7-admin (just in case we need admin console)
   - name: "Install Tomcat and Ant"
     apt: pkg={{ item }} state=installed
@@ -106,8 +89,6 @@
   # Apollo config is finished- run apollo deploy script to create war file
   - name: "Deploy apollo"
     shell: "export SDKMAN_DIR=\"{{ grails_home }}\" && source {{ grails_home }}/bin/sdkman-init.sh && ./apollo deploy"
-    become: yes
-    become_user: ubuntu
     args:
       chdir: "{{ apollo_home }}"
       executable: /bin/bash
