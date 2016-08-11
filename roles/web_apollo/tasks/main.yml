@@ -119,7 +119,7 @@
 
   # Apollo config is finished- run apollo deploy script to create war file
   - name: "Deploy apollo"
-    shell: "export SDKMAN_DIR=\"{{ grails_home }}\" && source {{ grails_home }}/bin/sdkman-init.sh && ./apollo deploy"
+    shell: "./apollo deploy"
     args:
       chdir: "{{ apollo_home }}"
       executable: /bin/bash
