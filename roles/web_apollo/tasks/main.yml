@@ -19,33 +19,14 @@
   - name: "Create apollo directory - scripts"
     file: path="{{ apollo_home }}/scripts" state=directory owner=ubuntu group=ubuntu
 
-  # Install Tomcat7, Ant, and Tomcat7-admin (just in case we need admin console)
-  - name: "Install Tomcat and Ant"
+  ## INSTALL PACKAGES ##
+  # Install Tomcat7 and Tomcat7-admin (just in case we need admin console).
+  - name: "Install Tomcat"
     apt: pkg={{ item }} state=installed
     become: yes
     with_items:
         - tomcat7
         - tomcat7-admin
-        - ant
-
-  # Set environment variables inside profile and bashrc files
-  # This probably isn't needed, but just in case
-  - name: "Setting environment variables"
-    become: yes
-    ignore_errors: yes
-    lineinfile: dest="{{ item[0] }}" line="{{ item[1] }}" state=present
-    with_nested:
-      - ["/home/ubuntu/.bashrc", "/home/ubuntu/.profile", "/root/.bashrc", "/root/.profile", "/home/researcher/.bashrc", "/home/researcher/.profile"]
-      - ["export TOMCAT_HOME=/var/lib/tomcat7/",
-         "export CATALINA_HOME=/usr/share/tomcat7",
-         "export CATALINA_BASE=/var/lib/tomcat7"]
-
-  # Set environment variables - source bashrc
-  - name: "Source ~/.bashrc"
-    shell: source /home/ubuntu/.bashrc
-    become_user: ubuntu
-    args:
-      executable: /bin/bash
 
   # Increase memory for tomcat7
   # This is a requirement for Web Apollo, or it will crash
