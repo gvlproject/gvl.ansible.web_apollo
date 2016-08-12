@@ -11,6 +11,14 @@
     sudo: yes
     sudo_user: root
 
+  # Create the directory for the war file to go in.
+  - name: "Create apollo directory - target"
+    file: path="{{ apollo_home }}/target" state=directory owner=ubuntu group=ubuntu recurse=yes
+
+  # Create the directory for the scripts.
+  - name: "Create apollo directory - scripts"
+    file: path="{{ apollo_home }}/scripts" state=directory owner=ubuntu group=ubuntu
+
   # Install Tomcat7, Ant, and Tomcat7-admin (just in case we need admin console)
   - name: "Install Tomcat and Ant"
     apt: pkg={{ item }} state=installed
@@ -49,17 +57,6 @@
   - name: "Set JAVA_HOME in tomcat7 config"
     copy: src="tomcat7" dest="/etc/default/tomcat7" owner=tomcat7 mode=0755
     become: yes
-
-  # Install Web Apollo by cloning git repo
-  # Version defined in defaults/main.yml
-  - name: "Install apollo"
-    git: repo=https://github.com/GMOD/Apollo.git dest={{ apollo_home }} version={{ apollo_version }}
-    become: yes
-    become_user: ubuntu
-
-  # Copy the postgres config files for Apollo
-  - name: "Copy postgres config files"
-    template: src="apollo-config.groovy.j2" dest="{{ apollo_home }}/apollo-config.groovy" owner=ubuntu mode=0600
 
   # Create a new database user, database_user
   - name: "Create the database postgres user"
@@ -117,21 +114,10 @@
       chdir: "{{ apollo_home }}/scripts"
       executable: /bin/bash
 
-  # Apollo config is finished- run apollo deploy script to create war file
-  - name: "Deploy apollo"
-    shell: "./apollo deploy"
-    become: yes
-    environment:
-        JAVA_HOME: /usr/lib/jvm/java-8-oracle
-    args:
-      chdir: "{{ apollo_home }}"
-      executable: /bin/bash
-
-  # Rename the apollo war file to something cleaner
-  - name: "Rename apollo war file"
-    command: "mv apollo-{{ apollo_version }}.war apollo.war"
-    args:
-      chdir: "{{ apollo_home }}/target/"
+  ## DEPLOY APOLLO ##
+  # Download the apollo war file into target directory.
+  - name: "Download apollo war file"
+    get_url: url=https://swift.rc.nectar.org.au:8888/v1/AUTH_377/cloudman-gvl-410/webapollo/apollo.war dest="{{ apollo_home }}/target/apollo.war" owner=ubuntu mode=0755 checksum=md5:BDC5FAE1823D0DA7ED751026F0919B96
 
   # Remove the default webapp files so we never see the splash screen
   - name: "Remove default webapp files"
