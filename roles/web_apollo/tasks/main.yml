@@ -1,6 +1,6 @@
 ---
-
-  # Check the GVL directories exist, and chown them to ubuntu
+  ## CREATE DIRECTORIES FOR APOLLO ##
+  # Check the GVL directories exist, and chown them to ubuntu.
   - name: "Check /mnt/gvl directory exists"
     file: name="/mnt/gvl" state=directory owner=ubuntu group=ubuntu
     sudo: yes
@@ -19,6 +19,10 @@
   - name: "Create apollo directory - scripts"
     file: path="{{ apollo_home }}/scripts" state=directory owner=ubuntu group=ubuntu
 
+  # Ensure the directory for the database exists - owned by postgres.
+  - name: "Create database directory"
+    file: path="{{ apollo_home }}/db" state=directory owner=postgres group=postgres mode=777
+
   ## INSTALL PACKAGES ##
   # Install Tomcat7 and Tomcat7-admin (just in case we need admin console).
   - name: "Install Tomcat"
@@ -28,8 +32,9 @@
         - tomcat7
         - tomcat7-admin
 
-  # Increase memory for tomcat7
-  # This is a requirement for Web Apollo, or it will crash
+  ## CONFIGURE TOMCAT7 ##
+  # Increase memory for tomcat7.
+  # This is a requirement for Web Apollo, or it will crash.
   - name: "Increase memory for tomcat"
     copy: src="setenv.sh" dest="/usr/share/tomcat7/bin" owner=tomcat7 mode=0755
     become: yes
@@ -39,7 +44,12 @@
     copy: src="tomcat7" dest="/etc/default/tomcat7" owner=tomcat7 mode=0755
     become: yes
 
-  # Create a new database user, database_user
+  # Copy files for tomcat (server.xml config file).
+  - name: "Copy server.xml to correct place"
+    template: src=server.xml.j2 dest="{{ tomcat_config }}/server.xml" owner=tomcat7 mode=0600
+
+  ## CONFIGURE DATABASES ##
+  # Create new database users, database_user and database_user_chado.
   - name: "Create the database postgres user"
     command: sudo -u postgres bash -c "psql -c \"CREATE USER {{ database_user }} WITH PASSWORD '{{ database_pass }}';\""
     ignore_errors: yes
@@ -52,31 +62,28 @@
     args:
       chdir: "{{ apollo_home }}"
 
-  # Ensure the directory for the database exists - owned by postgres
-  - name: "Create database directory"
-    file: path="{{ apollo_home }}/db" state=directory owner=postgres group=postgres mode=777
-
-  # Make sure postgres uses that location - create the gvl_apollo tablespace
+  # Make sure postgres uses that location - create the gvl_apollo tablespace.
   - name: "Make postgres aware of the new database location"
     command: sudo -u postgres bash -c "psql -c \"CREATE TABLESPACE gvl_apollo LOCATION '{{ apollo_home }}/db/'\""
     ignore_errors: yes
     args:
       chdir: "{{ apollo_home }}"
 
-  # Create the production database, apollo-production
+  # Create the production database, apollo-production.
   - name: "Create main production database"
     command: sudo su postgres -c "createdb -E UTF-8 -D gvl_apollo -O {{ database_user }} {{ database_prod }}"
     ignore_errors: yes
     args:
       chdir: "{{ apollo_home }}"
 
-  # Create the production database, apollo-production
+  # Create the production chado database, apollo-production-chado.
   - name: "Create chado database"
     command: sudo su postgres -c "createdb -E UTF-8 -D gvl_apollo -O {{ database_user_chado }} {{ database_prod_chado }}"
     ignore_errors: yes
     args:
       chdir: "{{ apollo_home }}"
 
+  # Copy across and run the script file to set up the chado database schema.
   - name: "Copy the script file across"
     copy: src="load_chado_schema.sh" dest="{{ apollo_home }}/scripts/load_chado_schema.sh" owner=ubuntu mode=0755
     become: yes
@@ -100,25 +107,21 @@
   - name: "Download apollo war file"
     get_url: url=https://swift.rc.nectar.org.au:8888/v1/AUTH_377/cloudman-gvl-410/webapollo/apollo.war dest="{{ apollo_home }}/target/apollo.war" owner=ubuntu mode=0755 checksum=md5:BDC5FAE1823D0DA7ED751026F0919B96
 
-  # Remove the default webapp files so we never see the splash screen
+  # Remove the default webapp files so we never see the splash screen.
   - name: "Remove default webapp files"
     file: path=/var/lib/tomcat7/webapps/ROOT state=absent
 
-  # Copy files for tomcat (server.xml)
-  - name: "Copy server.xml to correct place"
-    template: src=server.xml.j2 dest="{{ tomcat_config }}/server.xml" owner=tomcat7 mode=0600
-
-  # Restart Tomcat
+  # Restart Tomcat.
   - name: "Restart tomcat7"
     service: name=tomcat7 state=restarted
     become: yes
     become_user: root
 
-  # Add file to nginx folder to get tomcat and nginx to talk nicely
+  # Add file to nginx folder to get tomcat and nginx to talk nicely.
   - name: "Copy nginx config file"
     copy: src="apollo.locations" dest="{{ nginx_config }}/apollo.locations" mode=0600
     become: yes
 
-  # Restart Nginx to apply changes
+  # Restart Nginx to apply changes.
   - name: "restart nginx"
     service: name=nginx state=restarted
