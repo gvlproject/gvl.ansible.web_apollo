@@ -1,6 +1,9 @@
 ---
+  # Main .yml file to install Web Apollo as a GVL add-on.
+  # Written by Madison Flannery
 
-  # Check the GVL directories exist, and chown them to ubuntu
+  ## CREATE DIRECTORIES FOR APOLLO ##
+  # Check the GVL directories exist, and chown them to ubuntu.
   - name: "Check /mnt/gvl directory exists"
     file: name="/mnt/gvl" state=directory owner=ubuntu group=ubuntu
     sudo: yes
@@ -28,9 +31,10 @@
     args:
         executable: /bin/bash
 
-  # Install Tomcat7, Ant, and Tomcat7-admin (just in case we need admin console)
-  - name: "Install Tomcat and Ant"
-    apt: pkg={{ item }} state=installed
+  ## INSTALL PACKAGES ##
+  # Install Tomcat7 and Tomcat7-admin (just in case we need admin console).
+  - name: "Install Tomcat"
+    apt: pkg={{ item }} state=installed update_cache=yes
     become: yes
     with_items:
         - tomcat7
