@@ -1,4 +1,7 @@
 ---
+  # Main .yml file to install Web Apollo as a GVL add-on.
+  # Written by Madison Flannery
+  
   ## CREATE DIRECTORIES FOR APOLLO ##
   # Check the GVL directories exist, and chown them to ubuntu.
   - name: "Check /mnt/gvl directory exists"
