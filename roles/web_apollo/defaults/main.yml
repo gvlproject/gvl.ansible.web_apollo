@@ -15,4 +15,5 @@
   database_prod: "apollo-production"
   database_pass: "postgres_password"
 
+  gvl_install_path: /opt/gvl
 ...

@@ -140,6 +140,9 @@
   - name: "Copy nginx config file"
     copy: src="apollo.locations" dest="{{ nginx_config }}/apollo.locations" mode=0600
     become: yes
+    
+  - name: Copy the version info file into GVLDash
+    template: src=version_info.j2 dest={{ gvl_install_path }}/info/web_apollo.yml
 
   # Restart Nginx to apply changes
   - name: "restart nginx"
