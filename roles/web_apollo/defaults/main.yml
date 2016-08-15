@@ -15,4 +15,5 @@
   database_user_chado: "database_user_chado"
   database_prod_chado: "apollo-production-chado"
 
+  gvl_install_path: /opt/gvl
 ...
