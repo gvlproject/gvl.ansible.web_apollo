@@ -24,6 +24,12 @@
         - tomcat7-admin
         - ant
 
+  - name: "Install bower"
+    shell: /usr/bin/npm install -g bower
+    become: yes
+    args:
+      executable: /bin/bash
+
   # Set environment variables inside profile and bashrc files
   # This probably isn't needed, but just in case
   - name: "Setting environment variables"
