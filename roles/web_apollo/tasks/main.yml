@@ -112,6 +112,8 @@
     shell: "export SDKMAN_DIR=\"{{ grails_home }}\" && source {{ grails_home }}/bin/sdkman-init.sh && ./apollo deploy"
     become: yes
     become_user: ubuntu
+    environment:
+        JAVA_HOME: /usr/lib/jvm/java-8-oracle
     args:
       chdir: "{{ apollo_home }}"
       executable: /bin/bash
@@ -140,7 +142,7 @@
   - name: "Copy nginx config file"
     copy: src="apollo.locations" dest="{{ nginx_config }}/apollo.locations" mode=0600
     become: yes
-    
+
   - name: Copy the version info file into GVLDash
     template: src=version_info.j2 dest={{ gvl_install_path }}/info/web_apollo.yml
 
