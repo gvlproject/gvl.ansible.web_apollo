@@ -113,7 +113,7 @@
     become: yes
     become_user: ubuntu
     environment:
-        JAVA_HOME: /usr/lib/jvm/java-8-oracle
+        JAVA_HOME: /usr/lib/jvm/java-7-oracle
     args:
       chdir: "{{ apollo_home }}"
       executable: /bin/bash
