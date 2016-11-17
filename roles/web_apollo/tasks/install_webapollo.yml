@@ -104,7 +104,7 @@
     shell: "./apollo deploy"
     become: yes
     environment:
-        JAVA_HOME: /usr/lib/jvm/java-8-oracle
+        JAVA_HOME: "{{ java_home }}"
     args:
       chdir: "{{ apollo_home }}"
       executable: /bin/bash

@@ -7,7 +7,7 @@
     become: yes
 
   - name: "Create Tomcat8 user"
-    user: name=tomcat8 shell=/bin/false groups=tomcat8 home=/opt/tomcat8
+    user: name=tomcat8 shell=/bin/false groups=tomcat8 home="{{ tomcat_home }}"
     become: yes
 
   - name: "Download Tomcat8"
@@ -21,12 +21,17 @@
     unarchive: src=/opt/apache-tomcat-8.5.6.tar.gz dest=/opt/ remote_src=yes
 
   # Move file contents and remove lower level folder
+  # Rename unarchived folder to tomcat8.
+  # We first need to delete existing to avoid errors.
+  - name: "Remove originally created directory"
+    file: path="{{ tomcat_home }}" state=absent
+
   - name: "Clean up Tomcat8 directory structure"
-    command: "mv /opt/tomcat8/apache-tomcat-8.5.6/* /opt/tomcat8/"
+    command: "mv /opt/apache-tomcat-8.5.6 {{ tomcat_home }}"
     become: yes
 
   - name: "Chown the Tomcat8 directory"
-    file: dest=/opt/tomcat8/ owner=tomcat8 group=tomcat8 recurse=yes
+    file: dest="{{ tomcat_home }}" owner=tomcat8 group=tomcat8 recurse=yes
 
   - name: "Create intlctl/upstart script"
     template: src=tomcat.conf.j2 dest=/etc/init/tomcat.conf
