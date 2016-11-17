@@ -18,15 +18,15 @@
     become: yes
 
   - name: "Unarchive the downloaded Tomcat8"
-    unarchive: src=/opt/apache-tomcat-8.5.6.tar.gz dest=/opt/tomcat8 remote_src=yes
+    unarchive: src=/opt/apache-tomcat-8.5.6.tar.gz dest=/opt/ remote_src=yes
 
   # Move file contents and remove lower level folder
   - name: "Clean up Tomcat8 directory structure"
-    command: "mv /opt/apache-tomcat-8.5.6/ /opt/tomcat8/"
+    command: "mv /opt/tomcat8/apache-tomcat-8.5.6/* /opt/tomcat8/"
     become: yes
 
   - name: "Chown the Tomcat8 directory"
-    file: dest=/opt/apache-tomcat-8.5.6/ owner=tomcat8 group=tomcat8 recurse=yes
+    file: dest=/opt/tomcat8/ owner=tomcat8 group=tomcat8 recurse=yes
 
   - name: "Create intlctl/upstart script"
     template: src=tomcat.conf.j2 dest=/etc/init/tomcat.conf
@@ -34,6 +34,6 @@
     become_user: root
 
   - name: "Reload tomcat8 initctl config"
-    service: name=tomcat8 state=reloaded
+    command: "initctl reload-configuration"
     become: yes
     become_user: root
