@@ -3,6 +3,6 @@
   #
   # Author: Madison Flannery
 
-  - include: install_tomcat.yml
+  - include: install_tomcat8.yml
 #  - include: install_webapollo.yml
 ...

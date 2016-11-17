@@ -16,7 +16,7 @@
 
   ## INSTALL PACKAGES ##
   # Install Ant.
-  - name: "Install Tomcat"
+  - name: "Install Ant"
     apt: pkg={{ item }} state=installed update_cache=yes
     become: yes
     with_items:
@@ -27,36 +27,6 @@
     become: yes
     args:
       executable: /bin/bash
-
-  # Set environment variables inside profile and bashrc files
-  # This probably isn't needed, but just in case
-  - name: "Setting environment variables"
-    become: yes
-    ignore_errors: yes
-    lineinfile: dest="{{ item[0] }}" line="{{ item[1] }}" state=present
-    with_nested:
-      - ["/home/ubuntu/.bashrc", "/home/ubuntu/.profile", "/root/.bashrc", "/root/.profile", "/home/researcher/.bashrc", "/home/researcher/.profile"]
-      - ["export TOMCAT_HOME=/var/lib/tomcat7/",
-         "export CATALINA_HOME=/usr/share/tomcat7",
-         "export CATALINA_BASE=/var/lib/tomcat7"]
-
-  # Set environment variables - source bashrc
-  - name: "Source ~/.bashrc"
-    shell: source /home/ubuntu/.bashrc
-    become_user: ubuntu
-    args:
-      executable: /bin/bash
-
-  # Increase memory for tomcat7
-  # This is a requirement for Web Apollo, or it will crash
-  - name: "Increase memory for tomcat"
-    copy: src="setenv.sh" dest="/usr/share/tomcat7/bin" owner=tomcat7 mode=0755
-    become: yes
-
-  # Set JAVA_HOME inside the tomcat config.
-  - name: "Set JAVA_HOME in tomcat7 config"
-    copy: src="tomcat7" dest="/etc/default/tomcat7" owner=tomcat7 mode=0755
-    become: yes
 
   # Install Web Apollo by cloning git repo
   # Version defined in defaults/main.yml
@@ -145,17 +115,13 @@
     args:
       chdir: "{{ apollo_home }}/target/"
 
-  # Remove the default webapp files so we never see the splash screen
-  - name: "Remove default webapp files"
-    file: path=/var/lib/tomcat7/webapps/ROOT state=absent
-
   # Copy files for tomcat (server.xml)
   - name: "Copy server.xml to correct place"
-    template: src=server.xml.j2 dest="{{ tomcat_config }}/server.xml" owner=tomcat7 mode=0600
+    template: src=server.xml.j2 dest="{{ tomcat_config }}/server.xml" owner=tomcat8 mode=0600
 
   # Restart Tomcat
-  - name: "Restart tomcat7"
-    service: name=tomcat7 state=restarted
+  - name: "Restart tomcat8"
+    service: name=tomcat8 state=restarted
     become: yes
     become_user: root
 
