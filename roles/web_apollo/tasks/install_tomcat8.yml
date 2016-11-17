@@ -2,6 +2,7 @@
   # Tasks to install Tomcat8.
   # Written by Madison Flannery.
 
+  # Create Tomcat8 user and group.
   - name: "Create Tomcat8 group"
     group: name=tomcat8 state=present
     become: yes
@@ -10,6 +11,7 @@
     user: name=tomcat8 shell=/bin/false groups=tomcat8 home="{{ tomcat_home }}"
     become: yes
 
+  # Download Tomcat8 tarball, and unarchive.
   - name: "Download Tomcat8"
     get_url:
       url: http://archive.apache.org/dist/tomcat/tomcat-8/v8.5.6/bin/apache-tomcat-8.5.6.tar.gz
@@ -20,7 +22,6 @@
   - name: "Unarchive the downloaded Tomcat8"
     unarchive: src=/opt/apache-tomcat-8.5.6.tar.gz dest=/opt/ remote_src=yes
 
-  # Move file contents and remove lower level folder
   # Rename unarchived folder to tomcat8.
   # We first need to delete existing to avoid errors.
   - name: "Remove originally created directory"
@@ -30,6 +31,7 @@
     command: "mv /opt/apache-tomcat-8.5.6 {{ tomcat_home }}"
     become: yes
 
+  # Chown the directory so tomcat8 owns.
   - name: "Chown the Tomcat8 directory"
     file: dest="{{ tomcat_home }}" owner=tomcat8 group=tomcat8 recurse=yes
 

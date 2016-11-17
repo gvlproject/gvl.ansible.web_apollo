@@ -3,6 +3,7 @@
   # Written by Madison Flannery
 
   ## CREATE DIRECTORIES FOR APOLLO ##
+
   # Check the GVL directories exist, and chown them to ubuntu.
   - name: "Check /mnt/gvl directory exists"
     file: name="/mnt/gvl" state=directory owner=ubuntu group=ubuntu
@@ -15,12 +16,11 @@
     sudo_user: root
 
   ## INSTALL PACKAGES ##
+
   # Install Ant.
   - name: "Install Ant"
-    apt: pkg={{ item }} state=installed update_cache=yes
+    apt: pkg=ant state=installed update_cache=yes
     become: yes
-    with_items:
-        - ant
 
   - name: "Install bower"
     shell: /usr/bin/npm install -g bower
@@ -28,12 +28,16 @@
     args:
       executable: /bin/bash
 
+  ## INSTALL APOLLO ##
+
   # Install Web Apollo by cloning git repo
   # Version defined in defaults/main.yml
   - name: "Install apollo"
     git: repo=https://github.com/GMOD/Apollo.git dest={{ apollo_home }} version={{ apollo_version }}
     become: yes
     become_user: ubuntu
+
+  ## CREATE AND CONFIGURE DATABASES ##
 
   # Ensure the directory for the database exists - owned by postgres.
   - name: "Create database directory"
@@ -99,6 +103,8 @@
       chdir: "{{ apollo_home }}/scripts"
       executable: /bin/bash
 
+  ## DEPLOY APOLLO ##
+
   # Apollo config is finished- run apollo deploy script to create war file
   - name: "Deploy apollo"
     shell: "./apollo deploy"
@@ -115,6 +121,8 @@
     args:
       chdir: "{{ apollo_home }}/target/"
 
+  ## CONFIGURE AND RELOAD WEB SERVERS ##
+  
   # Copy files for tomcat (server.xml)
   - name: "Copy server.xml to correct place"
     template: src=server.xml.j2 dest="{{ tomcat_config }}/server.xml" owner=tomcat8 mode=0600
