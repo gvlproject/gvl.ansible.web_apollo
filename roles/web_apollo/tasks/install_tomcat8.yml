@@ -33,8 +33,9 @@
   - name: "Chown the Tomcat8 directory"
     file: dest="{{ tomcat_home }}" owner=tomcat8 group=tomcat8 recurse=yes
 
-  - name: "Create intlctl/upstart script"
-    template: src=tomcat.conf.j2 dest=/etc/init/tomcat.conf
+  # Create initctl script and reload initctl config.
+  - name: "Create initctl script"
+    template: src=tomcat8.conf.j2 dest=/etc/init/tomcat8.conf
     become: yes
     become_user: root
 

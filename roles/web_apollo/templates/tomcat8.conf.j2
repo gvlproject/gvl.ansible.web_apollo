@@ -8,9 +8,9 @@ description "Tomcat8 Server"
     setuid tomcat8
     setgid tomcat8
 
-    env JAVA_HOME=/usr/lib/jvm/java-8-oracle
-    env CATALINA_HOME=/opt/tomcat8
-    
+    env JAVA_HOME="{{ java_home }}"
+    env CATALINA_HOME="{{ tomcat_home }}"
+
     env TOMCAT8_USER=tomcat8
     env TOMCAT8_GROUP=tomcat8
 
