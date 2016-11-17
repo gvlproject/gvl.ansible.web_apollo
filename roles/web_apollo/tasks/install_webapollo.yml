@@ -1,0 +1,172 @@
+---
+  # Main .yml file to install Web Apollo as a GVL add-on.
+  # Written by Madison Flannery
+
+  ## CREATE DIRECTORIES FOR APOLLO ##
+  # Check the GVL directories exist, and chown them to ubuntu.
+  - name: "Check /mnt/gvl directory exists"
+    file: name="/mnt/gvl" state=directory owner=ubuntu group=ubuntu
+    sudo: yes
+    sudo_user: root
+
+  - name: "Check /mnt/gvl/apps directory exists"
+    file: name="/mnt/gvl/apps" state=directory owner=ubuntu group=ubuntu
+    sudo: yes
+    sudo_user: root
+
+  ## INSTALL PACKAGES ##
+  # Install Ant.
+  - name: "Install Tomcat"
+    apt: pkg={{ item }} state=installed update_cache=yes
+    become: yes
+    with_items:
+        - ant
+
+  - name: "Install bower"
+    shell: /usr/bin/npm install -g bower
+    become: yes
+    args:
+      executable: /bin/bash
+
+  # Set environment variables inside profile and bashrc files
+  # This probably isn't needed, but just in case
+  - name: "Setting environment variables"
+    become: yes
+    ignore_errors: yes
+    lineinfile: dest="{{ item[0] }}" line="{{ item[1] }}" state=present
+    with_nested:
+      - ["/home/ubuntu/.bashrc", "/home/ubuntu/.profile", "/root/.bashrc", "/root/.profile", "/home/researcher/.bashrc", "/home/researcher/.profile"]
+      - ["export TOMCAT_HOME=/var/lib/tomcat7/",
+         "export CATALINA_HOME=/usr/share/tomcat7",
+         "export CATALINA_BASE=/var/lib/tomcat7"]
+
+  # Set environment variables - source bashrc
+  - name: "Source ~/.bashrc"
+    shell: source /home/ubuntu/.bashrc
+    become_user: ubuntu
+    args:
+      executable: /bin/bash
+
+  # Increase memory for tomcat7
+  # This is a requirement for Web Apollo, or it will crash
+  - name: "Increase memory for tomcat"
+    copy: src="setenv.sh" dest="/usr/share/tomcat7/bin" owner=tomcat7 mode=0755
+    become: yes
+
+  # Set JAVA_HOME inside the tomcat config.
+  - name: "Set JAVA_HOME in tomcat7 config"
+    copy: src="tomcat7" dest="/etc/default/tomcat7" owner=tomcat7 mode=0755
+    become: yes
+
+  # Install Web Apollo by cloning git repo
+  # Version defined in defaults/main.yml
+  - name: "Install apollo"
+    git: repo=https://github.com/GMOD/Apollo.git dest={{ apollo_home }} version={{ apollo_version }}
+    become: yes
+    become_user: ubuntu
+
+  # Ensure the directory for the database exists - owned by postgres.
+  - name: "Create database directory"
+    file: path="{{ apollo_home }}/db" state=directory owner=postgres group=postgres mode=777
+
+  # Copy the postgres config files for Apollo
+  - name: "Copy postgres config files"
+    template: src="apollo-config.groovy.j2" dest="{{ apollo_home }}/apollo-config.groovy" owner=ubuntu mode=0600
+
+  # Create a new database user, database_user
+  - name: "Create the database postgres user"
+    command: sudo -u postgres bash -c "psql -c \"CREATE USER {{ database_user }} WITH PASSWORD '{{ database_pass }}';\""
+    ignore_errors: yes
+    args:
+      chdir: "{{ apollo_home }}"
+
+  - name: "Create the database postgres user"
+    command: sudo -u postgres bash -c "psql -c \"CREATE USER {{ database_user_chado }} WITH PASSWORD '{{ database_pass }}';\""
+    ignore_errors: yes
+    args:
+      chdir: "{{ apollo_home }}"
+
+  # Ensure the directory for the database exists - owned by postgres
+  - name: "Create database directory"
+    file: path="{{ apollo_home }}/db" state=directory owner=postgres group=postgres mode=777
+
+  # Make sure postgres uses that location - create the gvl_apollo tablespace
+  - name: "Make postgres aware of the new database location"
+    command: sudo -u postgres bash -c "psql -c \"CREATE TABLESPACE gvl_apollo LOCATION '{{ apollo_home }}/db/'\""
+    ignore_errors: yes
+    args:
+      chdir: "{{ apollo_home }}"
+
+  # Create the production database, apollo-production
+  - name: "Create main production database"
+    command: sudo su postgres -c "createdb -E UTF-8 -D gvl_apollo -O {{ database_user }} {{ database_prod }}"
+    ignore_errors: yes
+    args:
+      chdir: "{{ apollo_home }}"
+
+  # Create the production database, apollo-production
+  - name: "Create chado database"
+    command: sudo su postgres -c "createdb -E UTF-8 -D gvl_apollo -O {{ database_user_chado }} {{ database_prod_chado }}"
+    ignore_errors: yes
+    args:
+      chdir: "{{ apollo_home }}"
+
+  - name: "Copy the script file across"
+    copy: src="load_chado_schema.sh" dest="{{ apollo_home }}/scripts/load_chado_schema.sh" owner=ubuntu mode=0755
+    become: yes
+
+  - name: "Copy the script file across"
+    copy: src="chado-schema-with-ontologies.sql.gz" dest="{{ apollo_home }}/scripts/chado-schema-with-ontologies.sql.gz" owner=ubuntu mode=777
+    become: yes
+
+  - name: "Load chado schema"
+    shell: "./load_chado_schema.sh -u database_user_chado -d apollo-production-chado -h localhost -p 5432 -s chado-schema-with-ontologies.sql.gz"
+    become: yes
+    become_user: ubuntu
+    environment:
+      PGPASSWORD: "postgres_password"
+    args:
+      chdir: "{{ apollo_home }}/scripts"
+      executable: /bin/bash
+
+  # Apollo config is finished- run apollo deploy script to create war file
+  - name: "Deploy apollo"
+    shell: "./apollo deploy"
+    become: yes
+    environment:
+        JAVA_HOME: /usr/lib/jvm/java-8-oracle
+    args:
+      chdir: "{{ apollo_home }}"
+      executable: /bin/bash
+
+  # Rename the apollo war file to something cleaner
+  - name: "Rename apollo war file"
+    command: "mv apollo-{{ apollo_version }}.war apollo.war"
+    args:
+      chdir: "{{ apollo_home }}/target/"
+
+  # Remove the default webapp files so we never see the splash screen
+  - name: "Remove default webapp files"
+    file: path=/var/lib/tomcat7/webapps/ROOT state=absent
+
+  # Copy files for tomcat (server.xml)
+  - name: "Copy server.xml to correct place"
+    template: src=server.xml.j2 dest="{{ tomcat_config }}/server.xml" owner=tomcat7 mode=0600
+
+  # Restart Tomcat
+  - name: "Restart tomcat7"
+    service: name=tomcat7 state=restarted
+    become: yes
+    become_user: root
+
+  # Add file to nginx folder to get tomcat and nginx to talk nicely
+  - name: "Copy nginx config file"
+    copy: src="apollo.locations" dest="{{ nginx_config }}/apollo.locations" mode=0600
+    become: yes
+
+  - name: Copy the version info file into GVLDash
+    template: src=version_info.j2 dest={{ gvl_install_path }}/info/web_apollo.yml
+
+  # Restart Nginx to apply changes
+  - name: "restart nginx"
+    service: name=nginx state=restarted
