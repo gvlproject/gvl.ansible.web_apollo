@@ -16,4 +16,5 @@
   database_prod_chado: "apollo-production-chado"
 
   gvl_install_path: /opt/gvl
+  apollo_port: "9650"
 ...
