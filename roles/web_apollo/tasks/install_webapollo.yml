@@ -121,8 +121,12 @@
     args:
       chdir: "{{ apollo_home }}/target/"
 
+  # Chown the apollo target directory so tomcat8 owns.
+  - name: "Chown the apollo target directory"
+    file: dest="{{ apollo_home }}/target/" owner=tomcat8 group=tomcat8 recurse=yes
+
   ## CONFIGURE AND RELOAD WEB SERVERS ##
-  
+
   # Copy files for tomcat (server.xml)
   - name: "Copy server.xml to correct place"
     template: src=server.xml.j2 dest="{{ tomcat_config }}/server.xml" owner=tomcat8 mode=0600
